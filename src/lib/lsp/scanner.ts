@@ -12,6 +12,26 @@ enum TokenKinds {
 	EOF = "EOF",
 }
 
+const SECTIONS = [
+	"Car",
+	"Drive",
+	"Engine",
+	"VehicleControlUnit",
+	"WheelLF",
+	"WheelRF",
+	"WheelLB",
+	"WheelRB",
+	"SpringDamperLF",
+	"SpringDamperRF",
+	"SpringDamperLB",
+	"SpringDamperRB",
+	"TyreLF",
+	"TyreRF",
+	"TyreLB",
+	"TyreRB",
+] as const
+
+type Section = (typeof SECTIONS)[number];
 type TokenType = `${TokenKinds}`;
 
 interface SyntaxNode {
@@ -41,6 +61,7 @@ class Scanner {
 
 	constructor(source: string) {
 		this.source = source
+		// get current token after initialization
 		if (source.length > 0) {
 			this.currentToken = this.scanToken(this.source[this.current])
 		} else {
@@ -63,7 +84,7 @@ class Scanner {
 				return new Token(TokenKinds.EOF)
 			}
 		}
-
+		// move the start pointer to the correct position
 		this.start = this.current - 1
 		switch (char) {
 			case '(':
@@ -78,6 +99,7 @@ class Scanner {
 				} else if (this.isAlpha(char)) {
 					return new Token(TokenKinds.Identifier, this.readIdentifier())
 				} else {
+					// look for expected token instead
 					return this.scanToken(this.advance())
 				}
 		}
@@ -88,12 +110,14 @@ class Scanner {
 		this.currentToken = this.scanToken(this.advance())
 
 		switch (token.type) {
+			// every open parentheses will create a children/list inside the current node
 			case TokenKinds.OpenParen:
 				node.type = TokenKinds.List
 				const children: SyntaxNode[] = []
 				while (this.currentToken.type !== TokenKinds.ClosedParen && this.currentToken.type !== TokenKinds.EOF) {
 					children.push(this.parseExpression(this.currentToken))
 				}
+				// consume the closed parentheses
 				this.currentToken = this.scanToken(this.advance())
 				node.list = children
 				return node
@@ -103,6 +127,7 @@ class Scanner {
 				node.literal = token.literal
 				return node
 
+			// skip string until we found expected tokens
 			case TokenKinds.String:
 				return this.parseExpression(this.currentToken)
 
@@ -116,7 +141,8 @@ class Scanner {
 		}
 	}
 
-	parse(): Record<string, Record<string, string>> {
+	// parses the entire source text until end of file
+	parse(): Record<Section, Record<string, string>> {
 		const syntaxTree: SyntaxNode[] = []
 		while (this.peekToken().type !== TokenKinds.EOF) {
 			syntaxTree.push(this.parseExpression(this.currentToken))
@@ -124,17 +150,27 @@ class Scanner {
 		return this.buildTopLevelMap(syntaxTree[0]?.list?.[0]?.list?.[0] ?? [] as SyntaxNode)
 	}
 
-	buildTopLevelMap(root: SyntaxNode): Record<string, Record<string, string>> {
-		const result: Record<string, Record<string, string>> = {}
+	// generate key value map only from identifier followed by list
+	buildTopLevelMap(root: SyntaxNode): Record<Section, Record<string, string>> {
+		const result: Record<Section, Record<string, string>> = {} as Record<Section, Record<string, string>>;
+		SECTIONS.forEach(section => {
+			result[section] = {};
+		});
+
 		const items = root?.list ?? []
 
 		for (let i = 0; i < items.length - 1; i += 2) {
 			const keyNode = items[i]
 			const valueList = items[i + 1]
 
+			// skip every section that is not included in the section consts
+			if (!this.isSection(String(keyNode.literal))) {
+				continue
+			}
+
 			if (keyNode?.type === 'IDENTIFIER' && valueList?.type === 'LIST') {
 				const sectionName = String(keyNode.literal)
-				result[sectionName] = this.pairIdentifiersWithValues(valueList.list ?? [])
+				result[sectionName as Section] = this.pairIdentifiersWithValues(valueList.list ?? [])
 			}
 		}
 
@@ -148,6 +184,7 @@ class Scanner {
 			const keyNode = nodes[i]
 			const valueNode = nodes[i + 1]
 
+			// pair identifier with value only, not including single identifier without value
 			if (keyNode?.type === 'IDENTIFIER' && valueNode?.type === 'VALUE') {
 				const key = String(keyNode.literal)
 				const value = String(valueNode.literal)
@@ -238,6 +275,11 @@ class Scanner {
 	isAtEnd(): boolean {
 		return this.current >= this.length
 	}
+
+	isSection(value: string): value is Section {
+		return (SECTIONS as readonly string[]).includes(value);
+	}
 }
 
-export { Token, Scanner }
+export type { Section }
+export { Token, Scanner, SECTIONS }
