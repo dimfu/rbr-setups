@@ -65,6 +65,7 @@ class Scanner {
 	line = 1
 	currentToken: Token
 	source: string = ""
+	nodes: SyntaxNode[] = []
 
 	constructor(source: string) {
 		this.source = source
@@ -102,7 +103,9 @@ class Scanner {
 				} else if (this.isAlpha(char)) {
 					return new Token(TokenKinds.Identifier, this.readIdentifier())
 				} else if (this.isWhitespace(char)) {
-					this.line++
+					if (char === '\n') {
+						this.line++
+					}
 					return this.scanToken()
 				} else {
 					// look for expected token instead
@@ -159,7 +162,9 @@ class Scanner {
 		while (this.peekToken().type !== TokenKinds.EOF) {
 			syntaxTree.push(this.parseExpression(this.currentToken))
 		}
-		return this.buildTopLevelMap((syntaxTree[0]?.list?.[0].list ?? []) as SyntaxNode[])
+		const root = (syntaxTree[0]?.list?.[0].list ?? []) as SyntaxNode[]
+		this.nodes = root
+		return this.buildTopLevelMap(root)
 	}
 
 	// generate key value map only from identifier followed by list
@@ -294,4 +299,4 @@ class Scanner {
 }
 
 export type { Section }
-export { Token, Scanner, SECTIONS }
+export { Token, TokenKinds, Scanner, SECTIONS }
