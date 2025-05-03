@@ -298,5 +298,5 @@ class Scanner {
 	}
 }
 
-export type { Section }
+export type { Section, SyntaxNode }
 export { Token, TokenKinds, Scanner, SECTIONS }

@@ -55,7 +55,6 @@ describe('Scanner parsing behavior', () => {
 	test('pairs identifiers with values only', () => {
 		const scanner = new Scanner(`((Car (MaxSteeringLock 0.615 Orphan)))`)
 		const result = scanner.parse()
-		console.log(result)
 		expect(result.Car).toEqual({ MaxSteeringLock: '0.615' })
 	})
 
