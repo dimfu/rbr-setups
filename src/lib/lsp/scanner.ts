@@ -34,10 +34,17 @@ const SECTIONS = [
 type Section = (typeof SECTIONS)[number];
 type TokenType = `${TokenKinds}`;
 
+interface TokenAt {
+	line: number
+	column: number
+	index: number
+}
+
 interface SyntaxNode {
 	type?: TokenKinds
 	literal?: unknown
 	list?: SyntaxNode[]
+	tokenAt: TokenAt
 }
 
 class Token {
@@ -63,7 +70,7 @@ class Scanner {
 		this.source = source
 		// get current token after initialization
 		if (source.length > 0) {
-			this.currentToken = this.scanToken(this.source[this.current])
+			this.currentToken = this.scanToken()
 		} else {
 			this.currentToken = new Token(TokenKinds.EOF)
 		}
@@ -73,19 +80,15 @@ class Scanner {
 		return this.source.length
 	}
 
-	scanToken(char: string): Token {
+	scanToken(): Token {
 		if (this.isAtEnd()) {
 			return new Token(TokenKinds.EOF)
 		}
-		while (!this.isAtEnd() && this.isWhitespace(char)) {
-			if (char === '\n') this.line++
-			char = this.advance()
-			if (this.isAtEnd()) {
-				return new Token(TokenKinds.EOF)
-			}
-		}
+
 		// move the start pointer to the correct position
-		this.start = this.current - 1
+		this.start = this.current
+		const char = this.advance()
+
 		switch (char) {
 			case '(':
 				return new Token(TokenKinds.OpenParen)
@@ -98,16 +101,25 @@ class Scanner {
 					return new Token(TokenKinds.Value, this.readNumber())
 				} else if (this.isAlpha(char)) {
 					return new Token(TokenKinds.Identifier, this.readIdentifier())
+				} else if (this.isWhitespace(char)) {
+					this.line++
+					return this.scanToken()
 				} else {
 					// look for expected token instead
-					return this.scanToken(this.advance())
+					return this.scanToken()
 				}
 		}
 	}
 
 	parseExpression(token: Token): SyntaxNode {
-		const node: SyntaxNode = {}
-		this.currentToken = this.scanToken(this.advance())
+		const node: SyntaxNode = {
+			tokenAt: {
+				line: this.line,
+				column: this.current - this.start,
+				index: this.start
+			}
+		}
+		this.currentToken = this.scanToken()
 
 		switch (token.type) {
 			// every open parentheses will create a children/list inside the current node
@@ -118,7 +130,7 @@ class Scanner {
 					children.push(this.parseExpression(this.currentToken))
 				}
 				// consume the closed parentheses
-				this.currentToken = this.scanToken(this.advance())
+				this.currentToken = this.scanToken()
 				node.list = children
 				return node
 
@@ -147,17 +159,17 @@ class Scanner {
 		while (this.peekToken().type !== TokenKinds.EOF) {
 			syntaxTree.push(this.parseExpression(this.currentToken))
 		}
-		return this.buildTopLevelMap(syntaxTree[0]?.list?.[0]?.list?.[0] ?? [] as SyntaxNode)
+		return this.buildTopLevelMap((syntaxTree[0]?.list?.[0].list ?? []) as SyntaxNode[])
 	}
 
 	// generate key value map only from identifier followed by list
-	buildTopLevelMap(root: SyntaxNode): Record<Section, Record<string, string>> {
+	buildTopLevelMap(root: SyntaxNode[]): Record<Section, Record<string, string>> {
 		const result: Record<Section, Record<string, string>> = {} as Record<Section, Record<string, string>>;
 		SECTIONS.forEach(section => {
 			result[section] = {};
 		});
 
-		const items = root?.list ?? []
+		const items = root ?? []
 
 		for (let i = 0; i < items.length - 1; i += 2) {
 			const keyNode = items[i]
@@ -225,7 +237,7 @@ class Scanner {
 			throw new Error("Unterminated string")
 		}
 		this.advance()
-		return this.source.substring(this.start + 1, this.current - 1)
+		return this.source.substring(this.start, this.current - 1)
 	}
 
 	advance(): string {
