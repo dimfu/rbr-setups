@@ -1,7 +1,7 @@
-import { Scanner, Section, SyntaxNode, TokenKinds } from "./scanner"
+import { Scanner, SyntaxNode, TokenKinds } from "./scanner"
 
 class LSP {
-	props: Record<Section, Record<string, string>>
+	props: Record<string, Record<string, string>>
 	nodes: SyntaxNode[] = []
 	source: string
 

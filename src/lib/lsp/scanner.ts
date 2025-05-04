@@ -12,26 +12,6 @@ enum TokenKinds {
 	EOF = "EOF",
 }
 
-const SECTIONS = [
-	"Car",
-	"Drive",
-	"Engine",
-	"VehicleControlUnit",
-	"WheelLF",
-	"WheelRF",
-	"WheelLB",
-	"WheelRB",
-	"SpringDamperLF",
-	"SpringDamperRF",
-	"SpringDamperLB",
-	"SpringDamperRB",
-	"TyreLF",
-	"TyreRF",
-	"TyreLB",
-	"TyreRB",
-] as const
-
-type Section = (typeof SECTIONS)[number];
 type TokenType = `${TokenKinds}`;
 
 interface TokenAt {
@@ -157,7 +137,7 @@ class Scanner {
 	}
 
 	// parses the entire source text until end of file
-	parse(): Record<Section, Record<string, string>> {
+	parse(): Record<string, Record<string, string>> {
 		const syntaxTree: SyntaxNode[] = []
 		while (this.peekToken().type !== TokenKinds.EOF) {
 			syntaxTree.push(this.parseExpression(this.currentToken))
@@ -168,26 +148,17 @@ class Scanner {
 	}
 
 	// generate key value map only from identifier followed by list
-	buildTopLevelMap(root: SyntaxNode[]): Record<Section, Record<string, string>> {
-		const result: Record<Section, Record<string, string>> = {} as Record<Section, Record<string, string>>;
-		SECTIONS.forEach(section => {
-			result[section] = {};
-		});
-
+	buildTopLevelMap(root: SyntaxNode[]): Record<string, Record<string, string>> {
+		const result: Record<string, Record<string, string>> = {} as Record<string, Record<string, string>>;
 		const items = root ?? []
 
 		for (let i = 0; i < items.length - 1; i += 2) {
 			const keyNode = items[i]
 			const valueList = items[i + 1]
 
-			// skip every section that is not included in the section consts
-			if (!this.isSection(String(keyNode.literal))) {
-				continue
-			}
-
 			if (keyNode?.type === 'IDENTIFIER' && valueList?.type === 'LIST') {
 				const sectionName = String(keyNode.literal)
-				result[sectionName as Section] = this.pairIdentifiersWithValues(valueList.list ?? [])
+				result[sectionName] = this.pairIdentifiersWithValues(valueList.list ?? [])
 			}
 		}
 
@@ -292,11 +263,7 @@ class Scanner {
 	isAtEnd(): boolean {
 		return this.current >= this.length
 	}
-
-	isSection(value: string): value is Section {
-		return (SECTIONS as readonly string[]).includes(value);
-	}
 }
 
-export type { Section, SyntaxNode }
-export { Token, TokenKinds, Scanner, SECTIONS }
+export type { SyntaxNode }
+export { Token, TokenKinds, Scanner }

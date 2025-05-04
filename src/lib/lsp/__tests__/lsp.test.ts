@@ -24,7 +24,7 @@ describe("Lsp Class Tests", () => {
 	})
 
 	test("should update multiple setup section correctly", async () => {
-		const filepath = join(process.cwd(), "src/lib/lsp/__tests__/grip.lsp")
+		const filepath = join(process.cwd(), "src/lib/lsp/__tests__/grip.txt")
 		const content = await readFile(filepath, "utf-8")
 		const Lsp = new LSP(content)
 		Lsp.parse()

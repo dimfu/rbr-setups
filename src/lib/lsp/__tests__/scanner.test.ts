@@ -3,7 +3,7 @@ import { expect, test, describe } from 'vitest'
 import { join } from 'path'
 import { readFile } from 'fs/promises'
 
-import { Scanner, SECTIONS, TokenKinds } from '../scanner'
+import { Scanner, TokenKinds } from '../scanner'
 
 describe('Scanner parsing behavior', () => {
 	test('tokenizes numbers and identifiers', () => {
@@ -34,8 +34,8 @@ describe('Scanner parsing behavior', () => {
 		expect(result.Car?.MaxSteeringLock).toBeUndefined()
 	})
 
-	test('should get values from set section', async () => {
-		const filepath = join(process.cwd(), "src/lib/lsp/__tests__/grip.lsp")
+	test('(SETUP) should get values from set section', async () => {
+		const filepath = join(process.cwd(), "src/lib/lsp/__tests__/grip.txt")
 		const content = await readFile(filepath, "utf-8")
 		const scanner = new Scanner(content)
 		expect(scanner).toBeInstanceOf(Scanner)
@@ -49,6 +49,23 @@ describe('Scanner parsing behavior', () => {
 			}
 		})
 
+		expect(values).not.toBeNull()
+	})
+
+	test('(SETUP OPTIONS) should get values from set section', async () => {
+		const filepath = join(process.cwd(), "src/lib/lsp/__tests__/hyundai_i20_n_rally2_ngp7/r_tarmac.txt")
+		const content = await readFile(filepath, "utf-8")
+		const scanner = new Scanner(content)
+		expect(scanner).toBeInstanceOf(Scanner)
+		const values = scanner.parse()
+
+		const flattenNodes = scanner.nodes.flatMap(node => [node, ...(node.list ?? [])])
+		flattenNodes.forEach((node) => {
+			if ((node.type === TokenKinds.Identifier || node.type === TokenKinds.Value) && node.tokenAt) {
+				const substr = scanner.source.substring(node.tokenAt.index, node.tokenAt.index + node.tokenAt.column)
+				expect(node.literal).toBe(substr)
+			}
+		})
 		expect(values).not.toBeNull()
 	})
 
@@ -71,7 +88,7 @@ describe('Scanner parsing behavior', () => {
 
 		const values = scanner.parse()
 		const keys = Object.keys(values)
-		expect(keys).toStrictEqual(SECTIONS)
+		expect(keys).toStrictEqual(['Car', 'UnknownSection'])
 	})
 })
 
