@@ -1,38 +1,120 @@
 import { Scanner, SyntaxNode, TokenKinds } from "./scanner"
+import setupOptions from "./setup_options.json"
+
+type SetupOptionKeys = 'min' | 'max' | 'step';
 
 class LSP {
 	props: Record<string, Record<string, string>>
+	options: Record<string, string>
 	nodes: SyntaxNode[] = []
-	source: string
+	setupSource: string
+	optionsSource?: string
 
-	constructor(source: string) {
-		this.source = source
-		this.props = {} as typeof this.props
+	constructor(setupSource: string, optionsSource?: string) {
+		this.setupSource = setupSource
+		this.optionsSource = optionsSource
+		this.props = {}
+		this.options = {}
 	}
 
 	parse() {
-		const scanner = new Scanner(this.source)
-		const values = scanner.parse()
-		this.props = values
-		this.nodes = scanner.nodes
-		return values
+		const scannerSetup = new Scanner(this.setupSource)
+		const valuesSetup = scannerSetup.parse()
+		this.props = valuesSetup
+		this.nodes = scannerSetup.nodes
+
+		if (this.optionsSource) {
+			const scannerOptions = new Scanner(this.optionsSource)
+			const values = scannerOptions.parse()
+			this.options = this.flattenObject(values)
+		}
+
+		return valuesSetup
 	}
 
 	update(target: string, value: string) {
-		const valueNode = this.findSubSectionNode(target)
-		this.source =
-			this.source.slice(0, valueNode.tokenAt.index) +
-			value +
-			this.source.slice(valueNode.tokenAt.index + valueNode.tokenAt.column)
+		if (!this.optionsSource) {
+			throw new Error("Need options source parameter in order to update the car setup")
+		}
 
+		const validatedVal = this.validateSetupOpt(target, value)
+
+		const node = this.findSubSectionNode(target)
+		this.setupSource =
+			this.setupSource.slice(0, node.tokenAt.index) +
+			validatedVal +
+			this.setupSource.slice(node.tokenAt.index + node.tokenAt.column)
+
+		// reparse the sources since we updated the setup source
 		this.parse()
 	}
 
-	findSubSectionNode(target: string) {
+	validateSetupOpt(target: string, value: string) {
+		const [, key] = this.checkSectionKey(target)
+		const parsedVal = parseFloat(value)
+		if (isNaN(parsedVal)) {
+			throw new Error(`Invalid numeric value: ${value}`)
+		}
+		const numericVal = parsedVal.toFixed(6)
+
+		const rules: Record<string, (opt: string) => void> = {
+			min: (opt: string) => {
+				const threshold = parseFloat(this.options[opt])
+				if (threshold > parsedVal) {
+					throw new Error(`Value '${numericVal}' cannot be lower than ${threshold} for ${target}`)
+				}
+			},
+			max: (opt: string) => {
+				const threshold = parseFloat(this.options[opt])
+				if (threshold < parsedVal) {
+					throw new Error(`Value '${numericVal}' cannot be higher than ${threshold} for ${target}`)
+				}
+			},
+
+			// Some values ingame are not changeable, that if the default value are not a valid step that are given by the base option
+			// it will throw an error if we uncomment the step rule, will uncomment until I found how to determine which setup opt is disabled
+			//step: (opt: string) => {
+			//	const step = parseFloat(this.options[opt])
+			//	const base = 0
+			//	const epsilon = 1e-6
+			//
+			//	const diff = Math.abs((parsedVal - base) % step)
+			//
+			//	if (diff > epsilon && Math.abs(diff - step) > epsilon) {
+			//		throw new Error(`Value '${numericVal}' is not a multiple of step '${step}'`)
+			//	}
+			//},
+		};
+
+		const optionGroup = setupOptions[key]
+		if (!optionGroup) {
+			throw new Error(`No setup options found for key '${key}'`)
+		}
+
+		for (const optKey in optionGroup) {
+			const opt = optionGroup[optKey as SetupOptionKeys]
+			if (!opt || !rules[optKey]) continue
+			rules[optKey](opt)
+		}
+
+		return numericVal
+	}
+
+	checkSectionKey(target: string): [string, keyof typeof setupOptions] {
 		const [sectionName, key] = target.split(".")
 		if (!sectionName || !key) {
 			throw new Error("Target must be in 'Section.Key' format")
 		}
+
+		if (!(key in setupOptions)) {
+			throw new Error(`Key '${target}' is not recognized as setup options`)
+		}
+
+		return [sectionName, key as keyof typeof setupOptions]
+	}
+
+	findSubSectionNode(target: string) {
+		const [sectionName, key] = this.checkSectionKey(target)
 
 		// find the section index inside the root position
 		const sectionIdx = this.nodes.findIndex(
@@ -68,6 +150,19 @@ class LSP {
 		}
 
 		return subNodes[keyIdx + 1]
+	}
+
+	flattenObject(obj: Record<string, Record<string, string>>): Record<string, string> {
+		const result: Record<string, string> = {}
+		for (const key in obj) {
+			if (obj.hasOwnProperty(key)) {
+				const value = obj[key]
+				if (typeof value === 'object' && value !== null) {
+					Object.assign(result, value)
+				}
+			}
+		}
+		return result
 	}
 }
 
