@@ -53,7 +53,7 @@ describe('Scanner parsing behavior', () => {
 	})
 
 	test('(SETUP OPTIONS) should get values from set section', async () => {
-		const filepath = join(process.cwd(), "src/lib/lsp/__tests__/hyundai_i20_n_rally2_ngp7/r_tarmac.txt")
+		const filepath = join(process.cwd(), "src/lib/lsp/__tests__/r_tarmac.txt")
 		const content = await readFile(filepath, "utf-8")
 		const scanner = new Scanner(content)
 		expect(scanner).toBeInstanceOf(Scanner)
