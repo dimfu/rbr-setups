@@ -132,7 +132,7 @@ class Scanner {
 				return node
 
 			default:
-				throw new Error(`Invalid start of SyntaxNode token ${token.type}`)
+				throw new Error(`Invalid start of SyntaxNode token ${token.type} at line ${node.tokenAt.line}`)
 		}
 	}
 
