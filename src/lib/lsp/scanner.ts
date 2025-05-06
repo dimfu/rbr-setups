@@ -27,6 +27,15 @@ interface SyntaxNode {
 	tokenAt: TokenAt
 }
 
+interface SetupValues {
+	max?: string
+	min?: string
+	step?: string
+	value?: string
+}
+
+type Setup = Record<string, Record<string, SetupValues>>
+
 class Token {
 	type: TokenType
 	value?: string
@@ -137,7 +146,7 @@ class Scanner {
 	}
 
 	// parses the entire source text until end of file
-	parse(): Record<string, Record<string, string>> {
+	parse(): Setup {
 		const syntaxTree: SyntaxNode[] = []
 		while (this.peekToken().type !== TokenKinds.EOF) {
 			syntaxTree.push(this.parseExpression(this.currentToken))
@@ -148,8 +157,8 @@ class Scanner {
 	}
 
 	// generate key value map only from identifier followed by list
-	buildTopLevelMap(root: SyntaxNode[]): Record<string, Record<string, string>> {
-		const result: Record<string, Record<string, string>> = {} as Record<string, Record<string, string>>;
+	buildTopLevelMap(root: SyntaxNode[]): Setup {
+		const result: Record<string, Record<string, SetupValues>> = {}
 		const items = root ?? []
 
 		for (let i = 0; i < items.length - 1; i += 2) {
@@ -165,8 +174,8 @@ class Scanner {
 		return result
 	}
 
-	pairIdentifiersWithValues(nodes: SyntaxNode[]): Record<string, string> {
-		const result: Record<string, string> = {}
+	pairIdentifiersWithValues(nodes: SyntaxNode[]): Record<string, SetupValues> {
+		const result: Record<string, SetupValues> = {}
 
 		for (let i = 0; i < nodes.length - 1; i++) {
 			const keyNode = nodes[i]
@@ -176,7 +185,9 @@ class Scanner {
 			if (keyNode?.type === 'IDENTIFIER' && valueNode?.type === 'VALUE') {
 				const key = String(keyNode.literal)
 				const value = String(valueNode.literal)
-				result[key] = value
+				result[key] = {
+					value
+				}
 				i++ // skip value node
 			}
 		}
@@ -265,5 +276,5 @@ class Scanner {
 	}
 }
 
-export type { SyntaxNode }
+export type { SyntaxNode, Setup, SetupValues }
 export { Token, TokenKinds, Scanner }

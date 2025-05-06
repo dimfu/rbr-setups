@@ -72,7 +72,7 @@ describe('Scanner parsing behavior', () => {
 	test('pairs identifiers with values only', () => {
 		const scanner = new Scanner(`((Car (MaxSteeringLock 0.615 Orphan)))`)
 		const result = scanner.parse()
-		expect(result.Car).toEqual({ MaxSteeringLock: '0.615' })
+		expect(result.Car).toEqual({ MaxSteeringLock: { value: "0.615" } })
 	})
 
 	test('should not include unrecognized section value', () => {

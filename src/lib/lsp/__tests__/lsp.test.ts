@@ -4,6 +4,19 @@ import { join } from "path";
 import { readFile } from "fs/promises";
 
 describe("Lsp Class Tests", () => {
+	test("fill subsection values correctly", () => {
+		const Lsp = new LSP(`((Car (MaxSteeringLock 0.615)))`, `(("(null)"
+  CarOptions
+  ("(null)"
+   MaxSteeringLockRangeMax			0.620
+   MaxSteeringLockRangeMin			0.615
+   MaxSteeringLockRangeStep			0.010))`)
+		Lsp.parse()
+		expect(Lsp.props.Car.MaxSteeringLock.min).toBe("0.615")
+		expect(Lsp.props.Car.MaxSteeringLock.max).toBe("0.620")
+		expect(Lsp.props.Car.MaxSteeringLock.step).toBe("0.010")
+	})
+
 	test("update setup value properly", () => {
 		const Lsp = new LSP(`((Car (MaxSteeringLock 0.615)))`, `(("(null)"
   CarOptions
@@ -13,7 +26,7 @@ describe("Lsp Class Tests", () => {
    MaxSteeringLockRangeStep			0.010))`)
 		Lsp.parse()
 		Lsp.update("Car.MaxSteeringLock", "0.620000")
-		expect(Lsp.props.Car.MaxSteeringLock).toBe("0.620000")
+		expect(Lsp.props.Car.MaxSteeringLock.value).toBe("0.620000")
 	})
 
 	test("should throw on unrecognized setup section", () => {
@@ -41,9 +54,9 @@ describe("Lsp Class Tests", () => {
 		Lsp.update("SpringDamperRF.SpringStiffness", "15100")
 		Lsp.update("SpringDamperRF.HelperSpringLength", "0.280")
 
-		expect(Lsp.props.Car.MaxSteeringLock).toBe("0.617000")
-		expect(Lsp.props.SpringDamperRF.SpringLength).toBe("0.490000")
-		expect(Lsp.props.SpringDamperRF.SpringStiffness).toBe("15100.000000")
-		expect(Lsp.props.SpringDamperRF.HelperSpringLength).toBe("0.280000")
+		expect(Lsp.props.Car.MaxSteeringLock.value).toBe("0.617000")
+		expect(Lsp.props.SpringDamperRF.SpringLength.value).toBe("0.490000")
+		expect(Lsp.props.SpringDamperRF.SpringStiffness.value).toBe("15100.000000")
+		expect(Lsp.props.SpringDamperRF.HelperSpringLength.value).toBe("0.280000")
 	})
 })

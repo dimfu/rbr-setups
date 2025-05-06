@@ -1,9 +1,10 @@
 import SetupContainer from "@/components/setup_container"
+import { Setup } from "@/lib/lsp/scanner"
 import { trpc } from "@/lib/server/utils/trpc"
 import { ChangeEvent, useRef, useState } from "react"
 
 export default function Home() {
-  const [currSetup, setCurrSetup] = useState<Record<string, Record<string, string>>>({})
+  const [currSetup, setCurrSetup] = useState<Setup>({})
   const carsContainerRef = useRef<HTMLDivElement | null>(null)
 
   const setup = trpc.setup.load.useMutation()

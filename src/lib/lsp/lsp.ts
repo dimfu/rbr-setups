@@ -1,10 +1,10 @@
-import { Scanner, SyntaxNode, TokenKinds } from "./scanner"
+import { Scanner, Setup, SetupValues, SyntaxNode, TokenKinds } from "./scanner"
 import setupOptions from "./setup_options.json"
 
-type SetupOptionKeys = 'min' | 'max' | 'step';
+type SetupOptionKeys = 'min' | 'max' | 'step'
 
 class LSP {
-	props: Record<string, Record<string, string>>
+	props: Setup
 	options: Record<string, string>
 	nodes: SyntaxNode[] = []
 	setupSource: string
@@ -27,6 +27,7 @@ class LSP {
 			const scannerOptions = new Scanner(this.optionsSource)
 			const values = scannerOptions.parse()
 			this.options = this.flattenObject(values)
+			this.fillSetupValues()
 		}
 
 		return valuesSetup
@@ -113,6 +114,47 @@ class LSP {
 		return [sectionName, key as keyof typeof setupOptions]
 	}
 
+	fillSetupValues() {
+		// get every sections key from setup object
+		const sections: string[] = []
+		Object.keys(this.props).forEach((section) => {
+			const subsections: string[] = []
+			Object.keys(this.props[section]).forEach((subsection) => {
+				const key = `${section}.${subsection}`
+				try {
+					this.checkSectionKey(key)
+					subsections.push(key)
+				} catch {
+					// continue the iteration since we dont need to throw non existing key
+				}
+			})
+			sections.push(...subsections)
+		})
+		// fill every sub section values of min and max
+		for (const sectionStr of sections) {
+			const key = sectionStr as keyof typeof setupOptions
+			let section: string, subsection: keyof typeof setupOptions
+			try {
+				[section, subsection] = this.checkSectionKey(key)
+			} catch {
+				continue // skip invalid section strings
+			}
+
+			const optionGroup = setupOptions[subsection]
+			if (!optionGroup) {
+				continue
+			}
+
+			for (const optType of Object.keys(optionGroup) as (keyof SetupValues)[]) {
+				// had to infer it as SetupOptionKeys or TS will be angry rawr
+				const opt = optionGroup[optType as SetupOptionKeys]
+				this.props[section][subsection][optType] = this.options[opt]
+			}
+		}
+
+		return sections
+	}
+
 	findSubSectionNode(target: string) {
 		const [sectionName, key] = this.checkSectionKey(target)
 
@@ -152,13 +194,23 @@ class LSP {
 		return subNodes[keyIdx + 1]
 	}
 
-	flattenObject(obj: Record<string, Record<string, string>>): Record<string, string> {
+	flattenObject(obj: Setup): Record<string, string> {
 		const result: Record<string, string> = {}
-		for (const key in obj) {
-			if (obj.hasOwnProperty(key)) {
-				const value = obj[key]
-				if (typeof value === 'object' && value !== null) {
-					Object.assign(result, value)
+		for (const section in obj) {
+			if (obj.hasOwnProperty(section)) {
+				const inner = obj[section]
+				for (const key in inner) {
+					if (
+						inner.hasOwnProperty(key) &&
+						inner[key] &&
+						typeof inner[key] === 'object' &&
+						'value' in inner[key]
+					) {
+						// TODO: not sure if outer key that is directional always shares the same inner value
+						if (inner[key].value) {
+							result[key] = inner[key].value
+						}
+					}
 				}
 			}
 		}
