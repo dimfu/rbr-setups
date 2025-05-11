@@ -1,0 +1,97 @@
+{
+	"MaxSteeringLock": {
+		"min": "MaxSteeringLockRangeMin",
+		"max": "MaxSteeringLockRangeMax",
+		"step": "MaxSteeringLockRangeStep"
+	},
+	"FrontRollBarStiffness": {
+		"min": "FrontRollBarStiffnessMin",
+		"max": "FrontRollBarStiffnessMax",
+		"step": "FrontRollBarStiffnessStep"
+	},
+	"RearRollBarStiffness": {
+		"min": "RearRollBarStiffnessMin",
+		"max": "RearRollBarStiffnessMax",
+		"step": "RearRollBarStiffnessStep"
+	},
+	"FrontDiffMaxTorque": {
+		"max": "FrontDiffTorqueMax",
+		"min": "FrontDiffTorqueMin",
+		"step": "FrontDiffTorqueStep"
+	},
+	"CenterDiffMaxTorque": {
+		"max": "CenterDiffTorqueMax",
+		"min": "CenterDiffTorqueMin",
+		"step": "CenterDiffTorqueStep"
+	},
+	"CenterDiffHandbrakeRelease": {
+		"max": "CenterDiffHandbrakeReleaseRangeMax",
+		"min": "CenterDiffHandbrakeReleaseRangeMin",
+		"step": "CenterDiffHandbrakeReleaseRangeStep"
+	},
+	"BumpStopStiffnessFront_NGP": {
+		"max": "BumpStopStiffnessMax_NGP",
+		"min": "BumpStopStiffnessMin_NGP",
+		"step": "BumpStopStiffnessStep_NGP"
+	},
+	"RearDiffMaxTorque":{
+		"max": "RearDiffTorqueMax",
+		"min": "RearDiffTorqueMin",
+		"step": "RearDiffTorqueStep"
+	},
+	"MaxBrakePressureFront": {
+		"max": "FrontBrakePressureMax",
+		"min": "FrontBrakePressureMin",
+		"step": "FrontBrakePressureStep"
+	},
+	"MaxBrakePressureRear": {
+		"max": "RearBrakePressureMax",
+		"min": "RearBrakePressureMin",
+		"step": "RearBrakePressureStep"
+	},
+	"StrutPlatformHeight": {
+		"max": "PlatformHeightMax",
+		"min": "PlatformHeightMin",
+		"step": "PlatformHeightStep"
+	},
+	"SteeringRodLength": {
+		"max": "SteeringRodMax",
+		"min": "SteeringRodMin",
+		"step": "SteeringRodStep"
+	},
+	"LeftFootBrakeThreshold":  {
+		"max": "LeftFootBrakeThresholdRangeMax",
+		"min": "LeftFootBrakeThresholdRangeMin",
+		"step": "LeftFootBrakeThresholdRangeStep" 
+	},
+	"SpringStiffness": {
+		"max": "SpringStiffnessMax",
+		"min": "SpringStiffnessMin",
+		"step": "SpringStiffnessStep"
+	},
+	"HelperSpringStiffness": {
+		"max": "HelperSpringStiffnessMax",
+		"min": "HelperSpringStiffnessMin",
+		"step": "HelperSpringStiffnessStep"
+	},
+	"SpringLength": {
+		"max": "SpringLengthMax",
+		"min": "SpringLengthMin",
+		"step": "SpringLengthStep" 
+	},
+	"HelperSpringLength":{
+		"max": "HelperSpringLengthMax",
+		"min": "HelperSpringLengthMin",
+		"step": "HelperSpringLengthStep"
+	},
+	"WheelAxisInclination": {
+		"max": "WheelAxisInclMax",
+		"min": "WheelAxisInclMin",
+		"step": "WheelAxisInclStep"
+	},
+	"Pressure": {
+		"max": "PressureMax",
+		"min": "PressureMin",
+		"step": "PressureStep"
+	}
+}
