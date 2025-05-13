@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import { join } from "path"
 import { readFile } from 'fs/promises'
 
-import LSP from "../../../src/lib/lsp"
+import LSP from "../../../src/lib/lsp/lsp"
 
 describe("Lsp Class Tests", () => {
   test("fill subsection values correctly", () => {

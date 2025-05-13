@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rbr-setups",
+  "compatibility_date": "2024-04-01",
+  "compatibility_compat": [
+    "nodejs_compat"
+  ],
+  "main": "./src/index.tsx",
+  "assets": {
+    "directory": "./public",
+    "binding": "__STATIC_ASSET"
+  },
+  "vars": {
+    "BASE_URL": "",
+    "AUTH_DISCORD_ID":"",
+    "AUTH_DISCORD_SECRET":"",
+    "AUTH_SECRET":""
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "",
+      "database_id": ""
+      "migrations_dir": ""
+    }
+  ],
+}
